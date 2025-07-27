@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>All Orders – GroceRight</title>
+
+	<!-- ================================
+		1. Global Styles & Responsive Layout
+		- Base font, background, and mobile adjustments
+     ================================= -->
+	<style>
+		body {
+			font-family: 'Segoe UI', sans-serif;
+			background: rgb(177, 216, 183);
+			margin: 0;
+			min-height: 100vh;
+			padding: 0;
+		}
+
+		/* ================================
+			2. HEADER
+			- White bar with logo and back button aligned
+     	================================= */
+		.header {
+			background: white;
+			padding: 20px;
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-between;
+			align-items: flex-end;
+		}
+
+		.header img {
+			height: 90px;
+			object-fit: contain;
+		}
+
+		.back-btn {
+			text-decoration: none;
+			color: white;
+			background-color: #0044cc;
+			padding: 8px 16px;
+			border-radius: 8px;
+		}
+
+		.back-btn:hover {
+			background-color: #003399;
+		}
+
+		/* ================================
+			3. CONTAINER & TABLE STYLING
+			- Box-shadow for emphasis, consistent padding
+     	================================= */
+		.container {
+			padding: 20px;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			background: white;
+			box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+		}
+
+		th,
+		td {
+			border: 1px solid #ddd;
+			padding: 0.8em 1.2em;
+			text-align: center;
+		}
+
+		th {
+			background: #d0e5ff;
+		}
+
+		/* ================================
+			4. BUTTON STYLES
+			- Green “View” button that matches brand palette
+     	================================= */
+		.btn-green {
+			background: #4caf50;
+			color: white;
+			border: none;
+			padding: 6px 12px;
+			border-radius: 4px;
+			text-decoration: none;
+			font-size: 0.9rem;
+		}
+
+		.btn-green:hover {
+			background: #388e3c;
+		}
+
+		/* ================================
+			5. INLINE ERROR MESSAGE
+			- Prominent red text for fetch failures
+		================================= */
+		#error-message {
+			color: red;
+			font-weight: bold;
+			margin-bottom: 10px;
+		}
+
+		/* ================================
+			6. RESPONSIVE BREAKPOINTS
+			- Mobile font-size adjustments and header stacking
+     	================================= */
+		@media (max-width: 600px) {
+			.header {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			table, th, td {
+				font-size: 0.9rem;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<!-- ================================
+       	HEADER: Logo + Back Navigation
+     ================================= -->
+	<div class="header">
+		<img src="/static/images/logo.png" alt="GroceRight Logo">
+		<a href="/index" class="btn btn-primary btn-lg back-btn">← Back to Dashboard</a>
+	</div>
+
+	<div class="container">
+		<!-- ================================
+			ERROR AREA
+			- Shows network/fetch errors inline
+       	================================= -->
+		<div id="error-message"></div>
+
+		<!-- ================================
+			ORDERS TABLE PLACEHOLDER
+			- Populated via JS on DOMContentLoaded
+       	================================= -->
+		<div id="orders-table"></div>
+	</div>
+
+	<script>
+		// ===========================================================================
+		// fetchOrders()
+		// - Retrieves all orders from backend and renders into HTML table.
+		// - Handles both empty-state and error-state inline.
+		// ===========================================================================
+		async function fetchOrders() {
+			try {
+				const resp = await fetch('/getOrders');
+				const orders = await resp.json();
+
+				// 1) Empty‐state: no orders
+				if (!orders.length) {
+					document.getElementById('orders-table').innerHTML = '<p>No orders found.</p>';
+					return;
+				}
+
+				// 2) Build table header & rows
+				let html = `
+					<table>
+						<thead>
+							<tr>
+								<th>Order ID</th>
+								<th>Customer</th>
+								<th>Total Bill</th> 
+								<th>Date & Time</th>
+								<th>Action</th> 
+							</tr>
+						</thead>
+						<tbody>
+				`;
+				orders.forEach(o => {
+					html += `
+						<tr>
+							<td>${o.order_id}</td>
+							<td>${o.customer_name}</td>
+							<td>${parseFloat(o.total).toFixed(2)}</td>
+							<td>${new Date(o.date_time).toLocaleString()}</td>
+							<td>
+              					<a class="btn-green" href="/orders/${o.order_id}">View</a>
+            				</td>
+          				</tr>`;
+				});
+				html += '</tbody></table>';
+
+				// 3) Inject into DOM
+				document.getElementById('orders-table').innerHTML = html;
+			} catch (err) {
+				document.getElementById('error-message').innerText =
+					'Error loading orders: ' + err.message;
+			}
+		}
+
+		// ===========================================================================
+		// Initialize page: fetch orders once DOM is ready
+		// ===========================================================================
+		document.addEventListener('DOMContentLoaded', fetchOrders);
+	</script>
+</body>
+
+</html>

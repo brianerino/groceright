@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GroceRight – Manage Products</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- =========================
+       1. External Dependencies
+       - Bootstrap for layout & components
+       - Google Fonts for typography
+       - Icons for UI affordances
+     ========================= -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+    <style>
+        /* ===========================================================================
+            2. Global Styles
+            - Background + font inheritance
+        =========================================================================== */
+        body {
+            background: rgb(177, 216, 183);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* ===========================================================================
+            3. Header Bar
+            - Logo on left, back-button on right
+            - Flex wrap for small screens
+        =========================================================================== */
+        .header {
+            background: white;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header img {
+            height: 90px;
+            object-fit: contain;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: white;
+            background-color: #0044cc;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .back-btn:hover {
+            background-color: #003399;
+        }
+
+        /* ===========================================================================
+            4. Page Header: Search + Actions
+            - Sticky-ish region for primary page controls
+        =========================================================================== */
+        .page-header {
+            background: rgb(177, 216, 183);
+            padding: 20px 2%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h2 {
+            margin: 0;
+        }
+
+        /* style the toggle so it exactly matches the other button */
+        .page-header .dropdown-toggle {
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+
+        .page-header .dropdown+.btn-primary {
+            margin-left: 0.5rem;
+        }
+
+        /* ===========================================================================
+            5. Search Bar
+            - Gradient border styling, flex‐based layout
+        =========================================================================== */
+        .custom-search-bar {
+            display: flex;
+            align-items: center;
+            max-width: 600px;
+            height: 48px;
+            padding: 0 12px;
+            border-radius: 24px;
+            background: white;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            /* gradient border */
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            background-image:
+                linear-gradient(white, white),
+                linear-gradient(90deg, #4A90E2, #D81B60);
+        }
+
+        .custom-search-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            padding-left: 8px;
+        }
+
+        .custom-search-bar .search-icon {
+            color: #888;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+
+        /* ===========================================================================
+            6. Table Container
+            - Responsive table wrapper + header striping and hover states
+        =========================================================================== */
+        .table-container {
+            padding: 0 2% 20px;
+        }
+
+        .table-container .table {
+            background: white;
+            width: 100%;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-container .table th,
+        .table-container .table td {
+            padding: 0.6rem 0.8rem;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .table-container .table th {
+            font-weight: 600;
+            background-color: #D0E5FF;
+        }
+
+        .table-container .table tbody tr:nth-child(odd) {
+            background-color: #F8FAFF;
+        }
+
+        .table-container .table tbody tr:hover {
+            background-color: #E8F0FF;
+        }
+
+        .table-container .table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ===========================================================================
+            7. Utility Button Styles
+            - Primary blue and secondary grey
+        =========================================================================== */
+        .btn-primary {
+            background-color: #0044cc;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #003399;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+        }
+
+        /* ===========================================================================
+            8. Filter Panel Styles
+            - Accordion‐style checkboxes, sliders, scrollbar tweaks
+        =========================================================================== */
+        .filter-accordion {
+            margin-right: 16px;
+        }
+
+        .acc-content {
+            margin-top: 0.5em;
+            max-height: 200px;
+            overflow: auto;
+        }
+
+        .acc-content label {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .dropdown-menu {
+            padding: 1rem;
+            max-width: 400px;
+            overflow: auto;
+        }
+
+        .dropdown-menu .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .dropdown-menu label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            /* vertical gap between options */
+            cursor: pointer;
+        }
+
+        .dropdown-menu input[type="checkbox"] {
+            margin-right: 0.5rem;
+            /* space between box and text */
+            flex-shrink: 0;
+        }
+
+        /* --- Range sliders wrapper --- */
+        .dropdown-menu .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .dropdown-menu .form-row .col {
+            flex: 1;
+        }
+
+        /* --- Slider labels --- */
+        .dropdown-menu .form-row label {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        /* --- Apply/Reset button row --- */
+        .dropdown-menu .d-flex.justify-content-between {
+            margin-top: 1.5rem;
+        }
+
+        .dropdown-menu::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        /* make the dropdown-panel span most of the screen */
+        .filter-panel {
+            min-width: 400px;
+            max-width: 90vw;
+            width: auto;
+        }
+
+        /* ensure it’s not cut off on the right */
+        .dropdown-menu.filter-panel {
+            left: 0 !important;
+            right: auto !important;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <!-- =========================
+        HEADER
+        - Site logo + back navigation
+        ========================= -->
+    <div class="header">
+        <img src="/static/images/logo.png" alt="GroceRight Logo">
+        <a href="/index" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <!-- =========================
+        PAGE CONTROLS
+        - Search input + Filter/Add buttons
+        ========================= -->
+    <div class="page-header d-flex align-items-center justify-content-between">
+        <!-- gradient search bar -->
+        <div class="custom-search-bar my-3 mx-2">
+            <span class="search-icon">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="tableSearch" placeholder="Search products…" />
+        </div>
+
+        <div class="d-flex align-items-center" style="gap: 0.5rem;">
+            <!-- Toggle filter panel -->
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#filterPanel"
+                aria-expanded="false" aria-controls="filterPanel">
+                Filters
+            </button>
+
+            <!-- Add New Product -->
+            <button class="btn btn-primary" data-toggle="modal" data-target="#productModal">
+                Add New Product
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================
+        COLLAPSIBLE FILTER PANEL
+        - Category/Subcategory checkboxes + sliders + Apply/Reset
+        ========================= -->
+    <div class="collapse bg-white p-4 mb-3" id="filterPanel">
+        <div class="row">
+            <!-- Categories -->
+            <div class="col-md-3">
+                <label><strong>Categories</strong></label>
+                <div id="accCatsContent" class="border rounded px-2 py-1" style="max-height:200px; overflow:auto;">
+                </div>
+            </div>
+
+            <!-- Subcategories (dynamic) -->
+            <div class="col-md-3">
+                <label><strong>Subcategories</strong></label>
+                <div id="accSubsContent" class="border rounded px-2 py-1" style="max-height:200px; overflow:auto;">
+                </div>
+            </div>
+
+            <!-- Price slider -->
+            <div class="col-md-3">
+                <label><strong>Price:</strong> <span id="priceLabel">0 – 1000</span></label>
+                <input type="range" id="fltMinPrice" min="0" max="1000" value="0" class="form-control-range mb-1">
+                <input type="range" id="fltMaxPrice" min="0" max="1000" value="1000" class="form-control-range">
+            </div>
+
+            <!-- Quantity slider -->
+            <div class="col-md-3">
+                <label><strong>Quantity:</strong> <span id="qtyLabel">0 – 500</span></label>
+                <input type="range" id="fltMinQty" min="0" max="500" value="0" class="form-control-range mb-1">
+                <input type="range" id="fltMaxQty" min="0" max="500" value="500" class="form-control-range">
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <!-- Units -->
+            <div class="col-md-6">
+                <label><strong>Units</strong></label>
+                <div id="accUnitsContent" class="border rounded px-2 py-1" style="max-height:200px; overflow:auto;">
+                </div>
+            </div>
+
+            <!-- Reset & Apply -->
+            <div class="col-md-6 d-flex align-items-end justify-content-end" style="gap:0.5rem;">
+                <button class="btn btn-secondary" onclick="resetTableFilter()">Reset</button>
+                <button class="btn btn-primary" onclick="applyTableFilter()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =========================
+        PRODUCT TABLE
+        - Dynamic rows injected via JS
+     ========================= -->
+    <div class="table-container">
+        <div id="alert-container"></div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Subcategory</th>
+                        <th>Unit</th>
+                        <th>Price Per Unit</th>
+                        <th>Quantity</th>
+                        <th style="width:150px">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="product-list">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- =========================
+       MODAL: Add / Edit Product
+       - Reuses same form for both create & update
+     ========================= -->
+    <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add / Edit Product</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <!-- Hidden ID for edit mode -->
+                        <input type="hidden" id="id" value="0">
+                        <!-- Name -->
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input class="form-control" id="name" type="text" required>
+                        </div>
+                        <!-- Category -->
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" class="form-control" required
+                                onchange="loadSubcategories(this.value)">
+                                <option value="">Select category</option>
+                            </select>
+                        </div>
+                        <!-- Subcategory -->
+                        <div class="form-group">
+                            <label for="subcategory">Subcategory</label>
+                            <select id="subcategory" class="form-control" required>
+                                <option value="">Select subcategory</option>
+                            </select>
+                        </div>
+                        <!-- UOM -->
+                        <div class="form-group">
+                            <label for="uoms">Unit</label>
+                            <select id="uoms" class="form-control" required></select>
+                        </div>
+                        <!-- Price -->
+                        <div class="form-group">
+                            <label for="price">Price Per Unit</label>
+                            <input class="form-control" id="price" type="number" step="0.01" min="0" required>
+                        </div>
+                        <!-- Quantity -->
+                        <div class="form-group">
+                            <label for="quantity">Quantity</label>
+                            <input class="form-control" id="quantity" type="number" step="1" min="0" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <!-- Cancel vs Save emphasis -->
+                    <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" id="saveProduct">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================
+       9. Scripts & Initialization
+       - jQuery & Bootstrap JS for interaction
+       - Custom manage_product.js for core logic
+       - Inline: binds filters, search, CRUD actions
+     ========================= -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/manage_product.js') }}"></script>
+    <script>
+        /**
+         * Upon DOM ready:
+         * - Fetch categories, subcategories, UOMs
+         * - Wire up filter logic, search debounce, CRUD handlers
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            let allSubs = [];
+
+            // 1) Load Categories → render checkboxes
+            $.get('/getCategories').done(cats => {
+                const cC = $('#accCatsContent');
+                cats.forEach(c => {
+                    cC.append(
+                        `<div><label>
+                <input type="checkbox" value="${c.category_id}" class="cat-cb"> ${c.category_name}
+                </label></div>`
+                    );
+                });
+                renderSubcategories();
+            });
+
+            // 2) Load Subcategories (once) + dynamic re-render
+            $.get('/getAllSubcategories').done(subs => {
+                allSubs = subs;
+                renderSubcategories();
+            });
+
+            // 3) Load Units
+            $.get('/getUOMs').done(units => {
+                const uC = $('#accUnitsContent');
+                units.forEach(u => {
+                    uC.append(
+                        `<div><label>
+                <input type="checkbox" value="${u.uom_id}" class="uom-cb"> ${u.uom_name}
+                </label></div>`
+                    );
+                });
+            });
+
+            // 4) Price/Quantity slider label sync
+            const minP = $('#fltMinPrice'),
+                maxP = $('#fltMaxPrice'),
+                minQ = $('#fltMinQty'),
+                maxQ = $('#fltMaxQty');
+
+            function updateLabels() {
+                $('#priceLabel').text(`${minP.val()} – ${maxP.val()}`);
+                $('#qtyLabel').text(`${minQ.val()} – ${maxQ.val()}`);
+            }
+
+            // bind it
+            minP.add(maxP).add(minQ).add(maxQ).on('input', updateLabels);
+            updateLabels();
+
+
+            // 5) Subcategory cascade: re‐render sub‐checkboxes when categories change
+            function renderSubcategories() {
+                const chosen = $('.cat-cb:checked').map((_, c) => c.value).get();
+                const sC = $('#accSubsContent').empty();
+                allSubs
+                    .filter(s => !chosen.length || chosen.includes(String(s.category_id)))
+                    .forEach(s => {
+                        sC.append(
+                            `<div><label>
+                    <input type="checkbox" value="${s.subcategory_id}" class="sub-cb"> ${s.subcategory_name}
+                </label></div>`
+                        );
+                    });
+            }
+            $(document).on('change', '.cat-cb', renderSubcategories);
+
+            // 6) Apply filter → fetch & render table rows
+            window.applyTableFilter = function () {
+                const params = new URLSearchParams();
+                const cats = $('.cat-cb:checked').map((_, c) => c.value).get().join(',');
+                const subs = $('.sub-cb:checked').map((_, c) => c.value).get().join(',');
+                const units = $('.uom-cb:checked').map((_, c) => c.value).get().join(',');
+
+                if (cats) params.set('categories', cats);
+                if (subs) params.set('subcategories', subs);
+                if (units) params.set('units', units);
+
+                params.set('min_price', $('#fltMinPrice').val());
+                params.set('max_price', $('#fltMaxPrice').val());
+                params.set('min_quantity', $('#fltMinQty').val());
+                params.set('max_quantity', $('#fltMaxQty').val());
+
+                fetch(`/filterProductsAdvanced?${params}`)
+                    .then(r => r.json())
+                    .then(prods => {
+                        const rows = prods.map(p => `
+                    <tr>
+                    <td>${p.product_name}</td>
+                    <td>${p.category_name}</td>
+                    <td>${p.subcategory_name}</td>
+                    <td>${p.uom_name}</td>
+                    <td>${p.price_per_unit.toFixed(2)}</td>
+                    <td>${p.quantity}</td>
+                    <td style="width:150px">
+                        <button class="btn btn-info edit-btn" 
+                                data-product='${JSON.stringify(p)}'>Edit</button>
+                        <button class="btn btn-danger delete-btn" 
+                                data-id="${p.product_id}">Delete</button>
+                    </td>
+                    </tr>`).join('');
+                        $('#product-list').html(rows);
+                    })
+                    .finally(() => {
+                        // hide the collapse panel
+                        $('#filterPanel').collapse('hide');
+                    });
+            };
+
+
+            // 7) Reset filter → clear inputs & re‐apply
+            window.resetTableFilter = function () {
+                $('.cat-cb, .sub-cb, .uom-cb').prop('checked', false);
+                minP.val(0); maxP.val(1000);
+                minQ.val(0); maxQ.val(500);
+                updateLabels(); renderSubcategories();
+                applyTableFilter();
+            };
+
+            // 8) Edit/Delete delegation via event delegation
+            $(document).on('click', '.edit-btn', function () {
+                const prod = JSON.parse(this.dataset.product);
+
+                $('#id').val(prod.product_id);
+                $('#name').val(prod.product_name);
+                $('#category').val(prod.category_id);
+                loadSubcategories(prod.category_id);
+                $('#subcategory').val(prod.subcategory_id);
+                $('#uoms').val(prod.uom_id);
+                $('#price').val(prod.price_per_unit);
+                $('#quantity').val(prod.quantity);
+                $('#productModal').modal('show');
+            });
+
+            $(document).on('click', '.delete-btn', function () {
+                const id = this.dataset.id;
+                if (!confirm('Delete this product?')) return;
+                fetch(`/deleteProduct/${id}`, { method: 'DELETE' })
+                    .then(() => applyTableFilter());
+            });
+
+            // 9) Initial data load
+            applyTableFilter();
+        });
+    </script>
+
+    <script>
+        /**
+         * Debounced Search
+         * - Restores filtered view on empty input
+         * - Fires on Enter or 300ms after typing stops
+         */
+        (function () {
+            const searchInput = document.getElementById('tableSearch');
+            let timeout = null;
+
+            function renderRows(products) {
+                const html = products.map(p => `
+                <tr>
+                    <td>${p.product_name}</td>
+                    <td>${p.category_name}</td>
+                    <td>${p.subcategory_name}</td>
+                    <td>${p.uom_name}</td>
+                    <td>${p.price_per_unit.toFixed(2)}</td>
+                    <td>${p.quantity}</td>
+                    <td style="width:150px">
+                        <button class="btn btn-info edit-btn" data-product='${JSON.stringify(p)}'>Edit</button>
+                        <button class="btn btn-danger delete-btn" data-id="${p.product_id}">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+                document.getElementById('product-list').innerHTML = html;
+            }
+
+            function doSearch(query) {
+                if (!query) {
+                    applyTableFilter();
+                    return;
+                }
+                fetch(`/searchProducts?name=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(renderRows)
+                    .catch(console.error);
+            }
+
+            searchInput.addEventListener('input', e => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    doSearch(e.target.value.trim());
+                }, 300);
+            });
+
+            searchInput.addEventListener('keyup', e => {
+                if (e.key === 'Enter') {
+                    clearTimeout(timeout);
+                    doSearch(e.target.value.trim());
+                }
+            });
+        })();
+    </script>
+
+</body>
+
+</html>

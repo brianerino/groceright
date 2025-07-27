@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Place New Order</title>
+
+	<!-- ================================
+       1. External Dependencies
+       - Bootstrap for consistent styling & layout
+     ================================= -->
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		/* ============================
+			2. Global Layout & Typography
+			- Base body background, font, and container centering
+		============================ */
+		body {
+			background: #b6d7b6;
+			font-family: 'Segoe UI';
+			padding: 20px;
+			margin: 0;
+		}
+
+		.container {
+			max-width: 800px;
+			margin: auto;
+		}
+
+		/* ============================
+			3. Back Navigation Button
+			- Consistent “primary” brand color, hover state
+		============================ */
+		.back-btn {
+			background: #0044cc;
+			color: #fff;
+			padding: 8px 16px;
+			border-radius: 6px;
+			text-decoration: none;
+			margin-bottom: 20px;
+			display: inline-block;
+		}
+
+		.back-btn:hover {
+			background: #003399;
+		}
+
+		/* ============================
+			4. Headings & Form Spacing
+			- Visual hierarchy and whitespace for readability
+		============================ */
+		h2 {
+			margin-bottom: 1rem;
+		}
+
+		.form-group {
+			margin-bottom: 1.25rem;
+		}
+
+		/* ============================
+			5. Order Summary Panel
+			- Table styling, box-shadow for emphasis
+		============================ */
+		#orderSummary {
+			margin-top: 2rem;
+		}
+
+		#orderSummary table {
+			background: #fff;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		}
+
+		#orderSummary th {
+			background: #e9ecef;
+		}
+
+		#orderTotal {
+			font-weight: bold;
+		}
+
+		#submitOrderBtn {
+			min-width: 140px;
+		}
+
+		/* ============================
+			6. Alert Placeholder Animations
+			- Custom Bootstrap alert overrides + slideDown
+		============================ */
+		#alertPlaceholder .alert {
+			background-color: #0044cc !important;
+			color: #fff !important;
+			font-size: 1.2rem;
+			padding: 1rem 1.5rem;
+			border: 2px solid #002266 !important;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+			animation: slideDown 0.4s ease-out;
+		}
+
+		@keyframes slideDown {
+			from {
+				transform: translateY(-100%);
+				opacity: 0;
+			}
+
+			to {
+				transform: translateY(0);
+				opacity: 1;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<!-- ============================
+			HEADER NAVIGATION
+			- Return to dashboard
+       	============================ -->
+		<a href="/index" class="back-btn">← Back to Dashboard</a>
+
+		<!-- ============================
+			PAGE TITLE
+			- Contextual heading for user orientation
+       	============================ -->
+		<h2>Place New Order</h2>
+
+		<!-- ============================
+			ALERT AREA
+			- Dynamically show success/error messages
+       	============================ -->
+		<div id="alertPlaceholder"></div>
+
+		<!-- ============================
+			ORDER ENTRY FORM
+			- Select product, auto‐fill price, enter quantity
+			- “Add to Order” appends to order summary
+       	============================ -->
+		<form id="orderForm">
+			<div class="form-group">
+				<label for="productSelect">Product</label>
+				<select id="productSelect" class="form-control" required>
+					<option value="">-- choose --</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="unitPrice">Unit Price</label>
+				<input id="unitPrice" class="form-control" readonly>
+			</div>
+			<div class="form-group">
+				<label for="quantity">Quantity</label>
+				<input id="quantity" type="number" min="1" class="form-control" required>
+			</div>
+			<button type="submit" class="btn btn-success">Add to Order</button>
+		</form>
+
+		<!-- ============================
+			ORDER SUMMARY
+			- Live summary of line items + running total
+       	============================ -->
+		<div id="orderSummary">
+			<h4>Order Summary</h4>
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th>Product</th>
+						<th>Unit Price</th>
+						<th>Quantity</th>
+						<th>Subtotal</th>
+					</tr>
+				</thead>
+				<tbody id="orderTableBody"></tbody>
+			</table>
+			<div class="d-flex justify-content-between align-items-center">
+				<div>Total: $<span id="orderTotal">0.00</span></div>
+				<button type="button" id="submitOrderBtn" class="btn btn-primary">Submit Order</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- ============================
+       7. Core JavaScript Logic
+       - Fetch products, manage cart state, render table,
+         submit order, and show alerts.
+     ============================ -->
+	<script>
+
+		/**
+		 * showAlert(type, message):
+		 * Renders a Bootstrap dismissible alert inside
+		 * #alertPlaceholder. Used for inline feedback.
+		 */
+		function showAlert(type, message) {
+			document.getElementById('alertPlaceholder').innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      `;
+		}
+
+		// Application state containers
+		let products = [];   // all products from backend
+		let order = [];   // current cart items
+
+		// Prompt user for name once; fallback to “Guest”
+		const customerName = prompt('Welcome! What’s your name?')?.trim() || 'Guest';
+
+		document.addEventListener('DOMContentLoaded', () => {
+			// ----------------------------------------------------
+			// 1) Load Products → Populate dropdown
+			// ----------------------------------------------------
+			fetch('/getProducts')
+				.then(r => r.json())
+				.then(data => {
+					products = data;
+					// Map each product to an <option> element
+					const optionsHtml = data
+						.map(p => `<option value="${p.product_id}">${p.product_name}</option>`)
+						.join('');
+					document.getElementById('productSelect').innerHTML += optionsHtml;
+				})
+				.catch(err => {
+					console.error('Failed to load products:', err);
+					alert('Unable to load products. Please try again later.');
+				});
+
+			// ----------------------------------------------------
+			// 2) Auto‐fill unitPrice when product changes
+			// ----------------------------------------------------
+			document.getElementById('productSelect').addEventListener('change', e => {
+				const selectedId = +e.target.value;
+				const prod = products.find(p => p.product_id === selectedId);
+				document.getElementById('unitPrice').value = prod
+					? prod.price_per_unit.toFixed(2)
+					: '';
+			});
+
+			// ----------------------------------------------------
+			// 3) Add line‐item to cart on form submit
+			// ----------------------------------------------------
+			document.getElementById('orderForm').addEventListener('submit', e => {
+				e.preventDefault();
+
+				const pid = +document.getElementById('productSelect').value;
+				const qty = +document.getElementById('quantity').value;
+				const prod = products.find(p => p.product_id === pid);
+				if (!prod) {
+					return alert('Select a product first.');
+				}
+
+				// Append to order array
+				order.push({
+					name: prod.product_name,
+					unit_price: prod.price_per_unit,
+					quantity: qty,
+					subtotal: prod.price_per_unit * qty
+				});
+
+				renderOrderTable();
+
+				// Reset form for next entry
+				e.target.reset();
+				document.getElementById('unitPrice').value = '';
+			});
+
+			// ----------------------------------------------------
+			// 4) Submit final order via POST
+			// ----------------------------------------------------
+			document.getElementById('submitOrderBtn').addEventListener('click', () => {
+				document.getElementById('alertPlaceholder').innerHTML = '';
+
+				// Validate cart not empty
+				if (order.length === 0) {
+					return showAlert('danger', 'Your cart is empty. Add at least one item.');
+				}
+
+				fetch('/submitOrder', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ customer_name: customerName, items: order })
+				})
+					.then(r => r.json())
+					.then(({ order_id, error }) => {
+						if (error) {
+							return showAlert('danger', error);
+						}
+
+						// Show deduction summary
+						const deductionMsg = order
+							.map(item => `${item.quantity} ${item.name} deducted`)
+							.join('<br>');
+						showAlert('success', deductionMsg);
+
+						// Redirect after brief pause
+						setTimeout(() => {
+							window.location.href = `/orders/${order_id}`;
+						}, 1500);
+					})
+					.catch(err => {
+						console.error('Order submission failed:', err);
+						showAlert('danger', 'Failed to submit order. Please try again.');
+					});
+			});
+
+
+			// ----------------------------------------------------
+			// 5) Render current cart to summary table
+			// ----------------------------------------------------
+			function renderOrderTable() {
+				const tbody = document.getElementById('orderTableBody');
+				tbody.innerHTML = order.map(i => `
+					<tr>
+						<td>${i.name}</td>
+						<td>${i.unit_price.toFixed(2)}</td>
+						<td>${i.quantity}</td>
+						<td>${i.subtotal.toFixed(2)}</td>
+					</tr>
+        		`).join('');
+
+				// Update total
+				const total = order.reduce((sum, i) => sum + i.subtotal, 0);
+				document.getElementById('orderTotal').textContent = total.toFixed(2);
+
+			}
+		});
+
+	</script>
+
+	<!-- ================================
+		8. Bootstrap JS (for alerts)
+		================================= -->
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.6.2/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

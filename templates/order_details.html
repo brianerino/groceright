@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Order #{{ order_id }} Details</title>
+
+    <!-- ================================
+       1. Global Styles & Layout
+       - Base font, background, and container spacing
+     ================================= -->
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: rgb(177, 216, 183);
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* ================================
+            2. HEADER
+            - Displays logo and “Back to Orders” button
+        ================================= */
+        .header {
+            background: white;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header img {
+            height: 90px;
+            object-fit: contain;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: white;
+            background-color: #0044cc;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .back-btn:hover {
+            background-color: #003399;
+        }
+
+        /* ================================
+            3. MAIN CONTENT CONTAINER
+            - Heading spacing and bottom padding
+        ================================= */
+        h2 {
+            margin: 20px;
+        }
+
+        .container {
+            padding: 0 20px 40px;
+        }
+
+        /* ================================
+            4. TABLE STYLING
+            - Full‐width, zebra background on header, and box shadow
+        ================================= */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 1em;
+            text-align: center;
+        }
+
+        th {
+            background-color: #b3d7ff;
+        }
+
+        /* ================================
+            5. TOTAL ROW HIGHLIGHT
+            - Emphasize final sum with lighter background & bold
+        ================================= */
+        .total-row td {
+            font-weight: bold;
+            background-color: #e6f3ff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ================================
+        HEADER SECTION
+        - Logo on left, navigation on right 
+     ================================= -->
+    <div class="header">
+        <div class="header-left">
+            <img src="/static/images/logo.png" alt="GroceRight Logo">
+        </div>
+        <div class="header-right">
+            <a class="back-btn" href="/orders">← Back to Orders</a>
+        </div>
+    </div>
+
+    <!-- ================================
+        MAIN CONTENT
+        - Order ID heading + detailed table
+     ================================= -->
+    <div class="container">
+        <h2>Order #{{ order_id }} Details</h2>
+
+        <!--
+            ┌────────────────────────────────────────────────────┐
+            │ 6. ORDER ITEMS TABLE                              │
+            │ - Iterates over `order_items` Jinja list          │
+            │ - Accumulates `total.value` in-line               │
+            │ - Renders a final “Total Bill” row after the loop │
+            └────────────────────────────────────────────────────┘
+        -->
+
+        <table class="table table-bordered">
+            <thead class="thead-light">
+                <tr>
+                    <th>Product ID</th>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total = namespace(value=0.0) %}
+                {% for item in order_items %}
+                <tr>
+                    <td>{{ item.product_id }}</td>
+                    <td>{{ item.product_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ "%.2f"|format(item.unit_price) }}</td>
+                    <td>{{ "%.2f"|format(item.total_price) }}</td>
+                </tr>
+                {% set total.value = total.value + item.total_price %}
+                {% endfor %}
+                <!-- Final summary row -->
+                <tr class="total-row">
+                    <td colspan="4" class="text-right">Total Bill</td>
+                    <td>{{ "%.2f"|format(total.value) }}</td>
+                </tr>
+        </table>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GroceRight Login</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css">
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <style>
+        /* ===========================================================================
+            1. Global Reset & Base Styles
+            - Full height, zero margins, consistent font
+        =========================================================================== */
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* ===========================================================================
+            2. Layout: Split Screen Container
+            - Flex container, left for form, right for visuals
+        =========================================================================== */
+        .split-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ===========================================================================
+            3. Left Panel: Centered Login Form
+            - Flex centering, padding for breathing room
+        =========================================================================== */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* ===========================================================================
+            4. Login Wrapper: Width Constraints
+            - Limits maximum form width for readability
+        =========================================================================== */
+        .login-wrapper {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* ===========================================================================
+            5. Branding: Logo & Title
+            - Logo sizing, spacing; form title typography
+        =========================================================================== */
+        .logo-img {
+            max-width: 360px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-top: 0px;
+            margin-bottom: 30px;
+        }
+
+        /* ===========================================================================
+            6. Form Fields: Input Styling
+            - Taller inputs for touch, consistent font-size
+        =========================================================================== */
+        .form-group input {
+            height: 48px;
+            font-size: 1rem;
+        }
+
+        /* ===========================================================================
+            7. Call-to-Action: Sign In Button
+            - Full-width, high-contrast green for primary action
+        =========================================================================== */
+        .btn-signin {
+            width: 100%;
+            height: 48px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background-color: #1B9E2C;
+            border: none;
+        }
+
+        .btn-signin:hover {
+            background-color: #188F28;
+        }
+
+        /* ===========================================================================
+            8. Right Panel: Animation Container
+            - Center Lottie, optional floating shape overlay
+        =========================================================================== */
+        .right-panel {
+            flex: 1;
+            background-color: rgb(177, 216, 183);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .animate-shape {
+            width: 200px;
+            height: 200px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="split-container">
+
+        <!-- LEFT: LOGIN FORM SECTION -->
+        <div class="left-panel">
+            <div class="login-wrapper">
+                <img src="/static/images/logo.png" alt="GroceRight Logo" class="logo-img">
+                <div class="form-title">Sign In</div>
+
+                <!-- ===== Sign-In Form ===== -->
+                <form id="loginForm">
+                    <div class="form-group text-left">
+                        <label>Email Address</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group text-left">
+                        <label>Password</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+
+                    <!-- Primary Action -->
+                    <button type="submit" class="btn btn-primary btn-signin">Sign In</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT: VISUAL/ANIMATION SECTION -->
+        <div class="right-panel">
+            <lottie-player src="/static/loginanimation.json" background="transparent" speed="1"
+                style="width: 320px; height: 320px;" loop autoplay>
+            </lottie-player>
+
+        </div>
+    </div>
+
+    <script type="module">
+        // ===========================================================================
+        // 9. Firebase Initialization
+        // - Config loaded once, then create app & auth instances
+        // ===========================================================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKSt-jW9vpTW1Hapgx1PKrMLnEDgMK6Bs",
+            authDomain: "groceright-login.firebaseapp.com",
+            projectId: "groceright-login",
+            storageBucket: "groceright-login.firebasestorage.app",
+            messagingSenderId: "497859391536",
+            appId: "1:497859391536:web:d8b209436d71dd2a577df5",
+            measurementId: "G-J9T5TMNC7D"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // ===========================================================================
+        // 10. Form Submission Handler
+        // - Prevent form default, attempt sign-in, then redirect on success or alert on error
+        // ===========================================================================
+
+        document.getElementById('loginForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    alert("Login Successful!");
+                    window.location.href = "index";
+                })
+                .catch((error) => {
+                    alert("Login Failed: " + error.message);
+                });
+        });
+    </script>
+</body>
+
+</html>
